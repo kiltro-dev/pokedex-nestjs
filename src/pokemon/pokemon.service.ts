@@ -35,7 +35,7 @@ export class PokemonService {
   }
 
   findAll() {
-    return `This action returns all pokemon`;
+    return this.pokemonModel.find();
   }
 
   async findOne(term: string) {
@@ -75,7 +75,9 @@ export class PokemonService {
   }
 
   async remove(id: string) {
-    const pokemon = await this.pokemonModel.findById(id);
-    await pokemon.deleteOne();
+    // const pokemon = await this.pokemonModel.findById(id);
+    // await pokemon.deleteOne();
+    const result = await this.pokemonModel.findByIdAndDelete(id);
+    return result;
   }
 }
