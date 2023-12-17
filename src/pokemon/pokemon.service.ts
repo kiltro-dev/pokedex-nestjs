@@ -15,6 +15,7 @@ export class PokemonService {
   constructor(
     @InjectModel(Pokemon.name) private readonly pokemonModel: Model<Pokemon>,
   ) {}
+
   async create(createPokemonDto: CreatePokemonDto) {
     createPokemonDto.name = createPokemonDto.name.toLowerCase();
     try {
@@ -54,16 +55,27 @@ export class PokemonService {
   }
 
   async update(term: string, updatePokemonDto: UpdatePokemonDto) {
-    const pokemon = await this.findOne(term);
-    if (updatePokemonDto.name)
-      updatePokemonDto.name = updatePokemonDto.name.toLowerCase();
-
-    await pokemon.updateOne(updatePokemonDto, { new: true });
-
-    return { ...pokemon.toJSON(), ...updatePokemonDto };
+    try {
+      const pokemon = await this.findOne(term);
+      if (updatePokemonDto.name)
+        updatePokemonDto.name = updatePokemonDto.name.toLowerCase();
+      await pokemon.updateOne(updatePokemonDto, { new: true });
+      return { ...pokemon.toJSON(), ...updatePokemonDto };
+    } catch (error) {
+      if (error.code === 11000) {
+        throw new BadRequestException(
+          `Pokemon exists in db ${JSON.stringify(error.keyValue)}`,
+        );
+      }
+      console.log(error);
+      throw new InternalServerErrorException(
+        `Can't update Pokemon - Check server logs`,
+      );
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} pokemon`;
+  async remove(id: string) {
+    const pokemon = await this.pokemonModel.findById(id);
+    await pokemon.deleteOne();
   }
 }
